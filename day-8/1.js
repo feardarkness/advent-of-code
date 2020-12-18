@@ -44,11 +44,55 @@ const path = require("path");
 const lineReader = require("line-reader");
 const instructions = [];
 
-lineReader.eachLine(path.join(__dirname, "input.txt"), function (line, isLast) {
-  console.log("line=====================================");
-  console.log(line);
-  console.log("=====================================");
+lineReader.eachLine(path.join(__dirname, "input-test.txt"), function (line, isLast) {
+  const [operation, argument] = line.split(" ");
+  instructions.push({
+    operation,
+    arg: {
+      sign: argument.substring(0, 1),
+      value: parseInt(argument.substring(1)),
+    },
+  });
+
   if (isLast) {
-    // console.log(`Total container bags: ${allDifferentContainerBags.size - 1}`);
+    console.log("instructions=====================================");
+    console.log(instructions);
+    console.log("=====================================");
+    const acc = calcAccumulatorValueUntilOperationRepeated(instructions);
+    console.log(`Accumulator: ${acc}`);
   }
 });
+
+const calcAccumulatorValueUntilOperationRepeated = (instructions) => {
+  let currentInstruction = 0;
+  let acc = 0;
+  const instructionsExecuted = new Map();
+
+  while (!instructionsExecuted.has(currentInstruction)) {
+    const operationData = instructions[currentInstruction];
+    instructionsExecuted.set(currentInstruction, 1);
+    switch (operationData.operation) {
+      case "acc":
+        if (operationData.arg.sign === "+") {
+          acc += operationData.arg.value;
+        } else {
+          acc -= operationData.arg.value;
+        }
+        currentInstruction++;
+        break;
+      case "jmp":
+        if (operationData.arg.sign === "+") {
+          currentInstruction += operationData.arg.value;
+        } else {
+          currentInstruction -= operationData.arg.value;
+        }
+        break;
+      case "nop":
+        currentInstruction++;
+        break;
+      default:
+        throw new Error("Operation not supported");
+    }
+  }
+  return acc;
+};
